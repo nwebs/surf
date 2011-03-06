@@ -72,7 +72,7 @@ class Session(object):
     # TODO: add cache
 
     def __init__(self, default_store=None, mapping={},
-                 auto_persist=False, auto_load=False):
+                 auto_persist=False, auto_load=False, query_contexts=None):
         """ Create a new `session` object that handles the creation of types
         and instances, also the session binds itself to the `Resource` objects
         to allow the Resources to access the data `store` and perform
@@ -84,6 +84,8 @@ class Session(object):
         """
 
         self.mapping = mapping
+
+        self.query_contexts = query_contexts
 
         self.__auto_persist = auto_persist
         self.__auto_load = auto_load
@@ -318,7 +320,7 @@ class Session(object):
                              'store_key' : store,
                              'session' : self})
 
-    def get_class(self, uri, store = None, *classes):
+    def get_class(self, uri, store=None, *classes):
         """
         See :func:`surf.session.Session.map_type`.
         The `uri` parameter can be any of the following:
@@ -335,7 +337,7 @@ class Session(object):
         return self.map_type(uri, store, *classes)
 
     def map_instance(self, concept, subject, store=None, classes=[],
-                     block_auto_load=False, context=None, query_contexts=None):
+                     block_auto_load=False, context=None):
         """Create a `instance` of the `class` specified by `uri` and `classes`
         to be inherited, see `map_type` for more information. """
 
@@ -349,11 +351,10 @@ class Session(object):
             concept = self.map_type(concept, store, *classes)
 
         return concept(subject, block_auto_load=block_auto_load,
-                       context=context, query_contexts=query_contexts)
+                       context=context)
 
     def get_resource(self, subject, uri=None, store=None, graph=None,
-                     block_auto_load=False, context=None, query_contexts=None,
-                     *classes):
+                     block_auto_load=False, context=None, *classes):
         """ Same as `map_type` but `set` the resource from the `graph`. """
 
         if not isinstance(subject, URIRef):
@@ -364,8 +365,7 @@ class Session(object):
 
         resource = self.map_instance(uri, subject, store, classes,
                                      block_auto_load=block_auto_load,
-                                     context=context,
-                                     query_contexts=query_contexts)
+                                     context=context)
 
         if graph:
             resource.set(graph)

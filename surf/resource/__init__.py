@@ -157,9 +157,9 @@ class Resource(object):
 
     __metaclass__ = ResourceMeta
     _dirty_instances = set()
-    
-    def __init__(self, subject = None, block_auto_load = False, context = None,
-                 query_contexts = None, namespace = None):
+
+    def __init__(self, subject=None, block_auto_load=False, context=None,
+                 namespace=None):
         """ Initialize a Resource, with the `subject` (a URI - either a string 
         or a URIRef). 
         
@@ -186,13 +186,6 @@ class Resource(object):
             self.__context = URIRef(unicode(context))
         elif self.session and self.store_key:
             self.__context = self.session[self.store_key].default_context
-
-        if query_contexts:
-            self.__query_contexts = query_contexts
-        elif self.__context:
-            self.__query_contexts = [self.__context]
-        else:
-            self.__query_contexts = []
 
         self.__expired = False
         self.__rdf_direct = {}
@@ -277,30 +270,6 @@ class Resource(object):
 
     """
 
-    def __set_query_contexts(self, values):
-        uri_refs = []
-        for value in values:
-            if not isinstance(value, URIRef):
-                value = URIRef(value)
-            uri_refs.append(value)
-
-        self.__query_contexts = tuple(uri_refs)
-
-    query_contexts = property(fget=lambda self: self.__query_contexts,
-                       fset=__set_query_contexts)
-    """ Contexts (graphs) where triples constituting this resource can originate
-    from.
-
-    Effects of having query contexts set:
-     - When resource as whole or its individual attributes are loaded,
-       triples will be only loaded from these contexts.
-     - When existence of resource is checked (:meth:`is_present`), only
-       triples in these contexts will be considered.
-
-    The query context defaults to the resource's (stored) context but can be
-    changed to allow values from other contexts to be accessed.
-    """
-
     @classmethod
     def _instance(cls, subject, vals, context=None, query_contexts=None,
                   store=None, block_auto_load=True):
@@ -348,7 +317,7 @@ class Resource(object):
             if isinstance(value[r], Resource) :
                 inst = value[r]
             elif type(r) in [URIRef, BNode]:
-                contexts, concepts_lists  = zip(*value[r].items()) or ([], [])
+                contexts, concepts_lists = zip(*value[r].items()) or ([], [])
                 # Flatten concepts lists
                 concepts = [concept for c in concepts_lists for concept in c]
                 # Use context of first concept as type
@@ -605,7 +574,7 @@ class Resource(object):
             subjects.update(cls.session[cls.store_key].instances_by_attribute(cls, direct_attributes, True, context))
         if inverse_attributes:
             subjects.update(cls.session[cls.store_key].instances_by_attribute(cls, inverse_attributes, False, context))
-        
+
         instances = []
         for s, types in subjects.items():
             if not isinstance(s, URIRef):
@@ -724,7 +693,7 @@ class Resource(object):
         # query like friends = get_by(is_foaf_knows_of = john), thus the
         # attribute name inversion
         uri, direct = attr2rdf(attribute_name)
-        
+
         # We'll be using inverse_attribute_name as keyword argument.
         # Python 2.6.2 and older doesn't allow unicode keyword arguments, 
         # so we do str().
