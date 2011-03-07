@@ -271,8 +271,8 @@ class Resource(object):
     """
 
     @classmethod
-    def _instance(cls, subject, vals, context=None, query_contexts=None,
-                  store=None, block_auto_load=True):
+    def _instance(cls, subject, vals, context=None, store=None,
+                  block_auto_load=True):
         """
         Create an instance from the `subject` and it's associated
         `concept` (`vals`) URIs.
@@ -299,7 +299,6 @@ class Resource(object):
         return cls.session.map_instance(uri, subject, classes=classes,
                                         block_auto_load=block_auto_load,
                                         context=context,
-                                        query_contexts=query_contexts,
                                         store=store)
 
     @classmethod
@@ -489,9 +488,9 @@ class Resource(object):
                     rdf_dict = resource.__rdf_inverse
 
                 # Save query_contexts
-                for i in range(len(surf_values)):
-                    if isinstance(surf_values[i], Resource):
-                        surf_values[i].query_contexts = self.query_contexts
+#                for i in range(len(surf_values)):
+#                    if isinstance(surf_values[i], Resource):
+#                        surf_values[i].query_contexts = self.query_contexts
 
                 # Initial synchronization
                 rdf_dict[predicate] = [resource.to_rdf(value) for value in surf_values]
@@ -634,7 +633,6 @@ class Resource(object):
         instance = cls._instance(subject,
                                  [rdf_type],
                                  context=context,
-                                 query_contexts=params.get("contexts"),
                                  store=cls.store_key,
                                  block_auto_load=False)
 
@@ -705,8 +703,8 @@ class Resource(object):
 
         kwargs = {inverse_attribute_name : self.subject}
         query = proxy.get_by(**kwargs)
-        if self.query_contexts:
-            query = query.context(*self.query_contexts)
+        if self.session.query_contexts:
+            query = query.context(*self.session.query_contexts)
         return query
 
     def serialize(self, format='xml', direct=False):
