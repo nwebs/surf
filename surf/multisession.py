@@ -1,31 +1,58 @@
+# -*- coding: utf-8 -*-
+
 from surf.session import Session
 from surf.store import Store
+from surf.rdf import URIRef
 
+class ClassProxy(object):
+    def __init__(self, multisession, uri, store=None, *classes):
+        self.multisession = multisession
+        self.uri = uri
+        self.store = store
+        self.classes = classes
 
+    def __call__(self, *args, **kwargs):
+        query_contexts = kwargs.pop('query_contexts',
+                                    self.multisession.default_query_contexts)
+        return self.query_contexts(query_contexts)\
+                   .__call__(*args, **kwargs)
+
+    def query_contexts(self, query_contexts):
+        if query_contexts is None:
+            raise Exception("query_contexts must not be None")
+        if not isinstance(query_contexts, list):
+            query_contexts = [query_contexts]
+        return self.multisession.query_contexts(query_contexts)\
+                   .get_class(self.uri, self.store, *self.classes)
+
+    def get_by(self, *args, **kwargs):
+        query_contexts = kwargs.pop('query_contexts',
+                                    self.multisession.default_query_contexts)
+        return self.query_contexts(query_contexts).get_by(*args, **kwargs)
+
+    def all(self, *args, **kwargs):
+        query_contexts = kwargs.pop('query_contexts',
+                                    self.multisession.default_query_contexts)
+        return self.query_contexts(query_contexts).all(*args, **kwargs)
 
 class Multisession(Session):
 
     sessions = {}
 
     def __init__(self, default_store, default_query_contexts=None,
-                 mapping={}, auto_persist=False, auto_load=False):
+                 mapping={}, auto_persist=False, auto_load=False, proxy_class=ClassProxy):
         """ Create a new `multisession` object that handles multiple sessions.
         Sessions will be cached.
         
         """
-                
+
         self.default_query_contexts = default_query_contexts
-        
+        self.proxy_class = proxy_class
+
         super(Multisession, self).__init__(default_store=default_store, mapping=mapping,
                  auto_persist=auto_persist, auto_load=auto_load, query_contexts=default_query_contexts)
-        
-        del self.query_contexts
 
-    def __call__(self, *args, **kwargs):
-        query_contexts = self.default_query_contexts
-        if "query_contexts" in kwargs:
-            query_contexts = kwargs.pop("query_contexts")
-        return self.query_contexts(query_contexts).__call__(*args, **kwargs)
+        del self.query_contexts
 
     def query_contexts(self, query_contexts):
         if query_contexts is None:
@@ -52,7 +79,7 @@ class Multisession(Session):
         return self.query_contexts(query_contexts).map_type(uri, store=store, *classes)
 
     def get_class(self, uri, store=None, *classes):
-        return ClassProxy(self, uri, store=None, *classes)
+        return self.proxy_class(self, uri, store=None, *classes)
 
     def map_instance(self, concept, subject, store=None, classes=[],
                      block_auto_load=False, context=None, query_contexts=None):
@@ -67,8 +94,10 @@ class Multisession(Session):
                      *classes):
         if query_contexts is None:
             query_contexts = self.default_query_contexts
+        if not isinstance(uri, URIRef):
+            uri = uri.query_contexts(query_contexts)
         return self.query_contexts(query_contexts)\
-                .get_resource(subject, uri=uri.query_contexts(query_contexts), store=store, graph=graph,
+                .get_resource(subject, uri=uri, store=store, graph=graph,
                               block_auto_load=block_auto_load, context=context, *classes)
 
     def load_resource(self, uri, subject, store=None, data=None, file=None,
@@ -81,42 +110,5 @@ class Multisession(Session):
 
 
 
-class ClassProxy(object):
-    def __init__(self, multisession, uri, store=None, *classes):
-        self.multisession = multisession
-        self.uri = uri
-        self.store = store
-        self.classes = classes
 
-    def __call__(self, *args, **kwargs):
-        query_contexts = self.multisession.default_query_contexts
-        if 'query_contexts' in kwargs:
-            query_contexts = kwargs.pop('query_contexts')
-        return self.multisession.query_contexts(query_contexts)\
-                   .get_class(self.uri, self.store, *self.classes)\
-                   .__call__(*args, **kwargs)
-
-#    def __getattr__(self, name):
-#        return getattr(self.multisession.query_contexts(query_contexts), name)
-
-    def query_contexts(self, query_contexts):
-        if query_contexts is None:
-            raise Exception("query_contexts must not be None")
-        if not isinstance(query_contexts, list):
-            query_contexts = [query_contexts]
-        return self.multisession.query_contexts(query_contexts)\
-                   .get_class(self.uri, self.store, *self.classes)
-                   
-    def get_by(self, *args, **kwargs):
-        query_contexts = self.multisession.default_query_contexts
-        if 'query_contexts' in kwargs:
-            query_contexts = kwargs.pop('query_contexts')
-        return self.query_contexts(query_contexts).get_by(*args, **kwargs)
-                   
-    def all(self, *args, **kwargs):
-        query_contexts = self.multisession.default_query_contexts
-        if 'query_contexts' in kwargs:
-            query_contexts = kwargs.pop('query_contexts')
-        return self.query_contexts(query_contexts).all(*args, **kwargs)
-    
 
