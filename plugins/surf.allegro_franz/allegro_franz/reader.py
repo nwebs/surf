@@ -58,7 +58,7 @@ class ReaderPlugin(RDFQueryReader):
         if not self.__catalog or not self.__repository:
             raise Exception('Must specify the <catalog> and the <repository> arguments')
 
-        self.__allegro_server = AllegroGraphServer(self.__server, port = self.__port)
+        self.__allegro_server = AllegroGraphServer(self.__server, port=self.__port)
         self.__allegro_catalog = self.__allegro_server.openCatalog(self.__catalog)
         self.__allegro_repository = self.__allegro_catalog.getRepository(self.__repository, Repository.ACCESS)
         self.__allegro_repository.initialize()
@@ -101,6 +101,7 @@ class ReaderPlugin(RDFQueryReader):
             return self.__execute_ask(unicode(query))
 
     def __execute_ask(self, q_string):
+        self.log.debug(q_string)
         boolQuery = self.__con.prepareBooleanQuery(QueryLanguage.SPARQL, q_string)
         return boolQuery.evaluate()
 
@@ -110,7 +111,7 @@ class ReaderPlugin(RDFQueryReader):
         tupleQuery.setIncludeInferred(self.inference)
         return tupleQuery.evaluate()
 
-    def execute_sparql(self, q_string, format = 'JSON'):
+    def execute_sparql(self, q_string, format='JSON'):
         self.log.debug(q_string)
         tupleQuery = self.__con.prepareQuery(QueryLanguage.SPARQL, q_string)
         tupleQuery.setIncludeInferred(self.inference)
