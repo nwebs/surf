@@ -94,7 +94,7 @@ class Multisession(Session):
                      *classes):
         if query_contexts is None:
             query_contexts = self.default_query_contexts
-        if not isinstance(uri, URIRef):
+        if isinstance(uri, self.proxy_class):
             uri = uri.query_contexts(query_contexts)
         return self.query_contexts(query_contexts)\
                 .get_resource(subject, uri=uri, store=store, graph=graph,
