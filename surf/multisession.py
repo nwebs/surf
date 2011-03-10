@@ -28,12 +28,14 @@ class ClassProxy(object):
     def get_by(self, *args, **kwargs):
         query_contexts = kwargs.pop('query_contexts',
                                     self.multisession.default_query_contexts)
-        return self.query_contexts(query_contexts).get_by(*args, **kwargs)
+        return self.query_contexts(query_contexts).get_by(*args, **kwargs)\
+                                                .context(*query_contexts)
 
     def all(self, *args, **kwargs):
         query_contexts = kwargs.pop('query_contexts',
                                     self.multisession.default_query_contexts)
-        return self.query_contexts(query_contexts).all(*args, **kwargs)
+        return self.query_contexts(query_contexts).all(*args, **kwargs)\
+                                                .context(*query_contexts)
 
 class Multisession(Session):
 
