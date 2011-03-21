@@ -46,7 +46,7 @@ class Plugin(object):
 
     def __init__(self, *args, **kwargs):
         logging.basicConfig()
-        self.log = logging.getLogger(self.__class__.__name__)
+        self.log = logging.getLogger(self.__class__.__module__)
         self.log.setLevel(logging.NOTSET)
         self.__inference = False
 

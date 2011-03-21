@@ -68,7 +68,7 @@ class Store(object):
     default_context = property(lambda self: self.__default_context)
 
     def __init__(self, reader=None, writer=None, *args, **kwargs):
-        self.log = logging.getLogger(self.__class__.__name__)
+        self.log = logging.getLogger(self.__class__.__module__)
         self.log.info('initializing the store')
         load_plugins()
 
